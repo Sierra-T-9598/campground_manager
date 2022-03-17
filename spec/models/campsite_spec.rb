@@ -7,7 +7,7 @@ RSpec.describe Campsite, type: :model do
 
   describe 'validations' do
     it { should validate_presence_of(:name) }
-    it { should validate_presence_of(:booked_dates) }
+    it { should validate_presence_of(:booked_dates).on(:create_booking) }
     it { should validate_presence_of(:price) }
   end
 end
