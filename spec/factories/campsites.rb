@@ -1,7 +1,9 @@
 FactoryBot.define do
   factory :campsite do
-    name { "MyString" }
-    price { 1.5 }
-    booked_dates { "MyString" }
+    name { Faker::Mountain.name }
+    price { Faker::Number.between(from: 10, to: 45).to_s }
+    booked_dates { nil }
+
+    association :campground
   end
 end
