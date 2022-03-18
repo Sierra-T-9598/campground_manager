@@ -50,14 +50,18 @@ This is a Ruby on Rails API built as a take-home tech challenge. The goal is to 
 ----------
 
 ### Important Gems
+- Database:
+  - `pg, '>= 0.18', '< 2.0'`
 
-- Testing: 
+- Development & Testing: 
  - `rspec-rails`
  - `pry`
  - `capybara`
  - `simplecov`
- - `webmock`
- - `vcr`
+ - `factory_bot_rails`
+ - `faker`
+ - `shoulda-matchers`
+
 
 - API: 
   - `jsonapi-serializer`
@@ -65,20 +69,47 @@ This is a Ruby on Rails API built as a take-home tech challenge. The goal is to 
 ----------
 
 ## Database Schema
-
+  ```
+  create_table "campgrounds", force: :cascade do |t|
+    t.string "name"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+```
+```
+create_table "campsites", force: :cascade do |t|
+    t.string "name"
+    t.float "price"
+    t.string "booked_dates"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "campground_id"
+    t.index ["campground_id"], name: "index_campsites_on_campground_id"
+  end
+  ```
+  ```
+create_table "bookings", force: :cascade do |t|
+    t.string "date"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "campsite_id"
+    t.index ["campsite_id"], name: "index_bookings_on_campsite_id"
+  end
+  ```
 ----------
 
 ## Getting Started
 
 ### Repository Set Up
 On your local system, open a terminal session to run the following commands:
-1. Clone this repository `$ git clone git@github.com:Sierra-T-9598/whether_sweater.git`
-2. Navigate to the newly cloned directory `$ cd whether_sweater`
+1. Fork & Clone this repository `$ git clone git@github.com:Sierra-T-9598/campground_manager.git`
+2. Navigate to the newly cloned directory `$ cd campground_manager`
 3. If bundler is not installed run `$ gem install bundler`
 4. If or after bundler is installed run `$ bundle install` to install the required Gems
 5. If errors occur, check for proper installation and versions of `bundler`, `ruby`, and `rails`
-6. Set up the database locally with `$ rails db:{:drop,:create,:migrate,:seed}`
-7. RAKE TASK HERE
+6. Set up the database locally with `$ rails db:{:drop,:create,:migrate}`
+7. To seed the development database run `$ rails csv_load:all`  **Note this will load campground and booking CSV data to the database **
+  - To seed just the campground csv data: `$ rails csv_load:campgrounds`
 8. Open your text editor and check to see that `schema.rb` exists
 9. Run the RSpec test suite locally with the command `$ bundle exec rspec` to ensure everything is functioning as expected.
 
@@ -94,99 +125,43 @@ On your command line:
 
 ----------
 
-## API
+## API V1
 Available endpoints
 
-[![Run in Postman](https://run.pstmn.io/button.svg)](https://app.getpostman.com/run-collection/99ba3fb57c77a60e7249?action=collection%2Fimport)
 
 ### Campground Endpoints
 
-| http verb | name | params | description | example |
+| http verb | name | params(optional) | description | example |
 | --- | --- | --- | --- | --- |
-| GET | /forecast | location| Returns current, daily, and hourly weather data for the given location | /api/v1/forecast?location=bozeman,mt |
-
-Data sourced from [MapQuest's Geocoding API](https://developer.mapquest.com/documentation/geocoding-api/) and [OpenWeather One Call API](https://openweathermap.org/api/one-call-api)
+| GET | /campgrounds | none | Returns all campgrounds | /api/v1/campgrounds |
+| GET | /campgrounds/:id | none | Returns a single campground | /api/v1/campgrounds/{{2}}|
+| GET | /campgrounds/:id/campsites | none | Returns all sites associated with a campground | /api/v1/campgrounds/{{2}}/campsites |
+| POST | /campgrounds | none | Returns a new campground record | /api/v1/campgrounds |
+| PATCH | /campgrounds/:id | none | Updates an exisiting campground record | /api/v1/campgrounds/{{2}} |
+| DELETE | /campgrounds/:id |none| Deletes a campground record | /api/v1/campgrounds/{{2}} |
+| GET | /campgrounds | from, to (both required) | Returns all campgrounds available for the date range | /api/v1/campgrounds?from={date}&to={date} |
+| GET | /campgrounds | order | Returns all campgrounds ordered by either `high_to_low` or `low_to_high` | /api/v1/campgrounds?order=high_to_low |
 
 <details>
-    <summary> JSON response examples </summary>
+    <summary> JSON response example </summary>
 
-Forecast by location:
+One Campground:
   ```
-  { "data": { 
-      "id":null,
-      "type":"forecast",
-      "attributes": { 
-            "current_weather": {
-                  "date_time":"12:28 PM, March 08, -0700",
-                  "sunrise":"06:49 AM, March 08, -0700",
-                  "sunset":"06:20 PM, March 08, -0700",
-                  "temperature":19.87,
-                  "feels_like":11.79,
-                  "humidity":73,
-                  "uvi":2.56,
-                  "visibility":10000,
-                  "conditions":"overcast clouds",
-                  "icon":"04d"},
-           "daily_weather": [
-              { 
-                  "date":"08-03-2022",
-                  "sunrise":"06:49 AM, March 08, -0700",
-                  "sunset":"06:20 PM, March 08, -0700",
-                  "max_temp":24.15,
-                  "min_temp":6.08,
-                  "conditions":"snow",
-                  "icon":"13d"
-              },
-              {
-                  "date":"09-03-2022",
-                  "sunrise":"06:48 AM, March 09, -0700",
-                  "sunset":"06:21 PM, March 09, -0700",
-                  "max_temp":12.7,
-                  "min_temp":-5.71,
-                  "conditions":"overcast clouds",
-                  "icon":"04d"
-              },
-              {
-                  "date":"10-03-2022",
-                  "sunrise":"06:46 AM, March 10, -0700",
-                  "sunset":"06:22 PM, March 10, -0700",
-                  "max_temp":19.89,
-                  "min_temp":-5.62,
-                  "conditions":"overcast clouds",
-                  "icon":"04d"
-              },
-              {
-                  "date":"11-03-2022",
-                  "sunrise":"06:44 AM, March 11, -0700",
-                  "sunset":"06:24 PM, March 11, -0700",
-                  "max_temp":31.68,
-                  "min_temp":11.97,
-                  "conditions":"light snow", 
-                  "icon":"13d"
-              },
-              {
-                  "date":"12-03-2022",
-                  "sunrise":"06:42 AM, March 12, -0700",
-                  "sunset":"06:25 PM, March 12, -0700",
-                  "max_temp":40.44,
-                  "min_temp":24.53,
-                  "conditions":"overcast clouds",
-                  "icon":"04d"
-              }
+  {
+    "data": {
+        "id": "1",
+        "type": "campground",
+        "attributes": {
+            "name": "Bicentennial Campground",
+            "booked_dates": [
+                "[\"4/5/22\", \"4/6/22\", \"5/5/22\"], 01",
+                "[\"5/5/22\", \"5/6/22\", \"5/7/22\"], 02",
+                "[\"5/7/22\", \"5/8/22\"], 03"
             ],
-            "hourly_weather": [
-                {"time":"12:00 PM","temperature":19.87,"conditions":"light snow","icon":"13d"},
-                {"time":"01:00 PM","temperature":20.01,"conditions":"light snow","icon":"13d"},
-                {"time":"02:00 PM","temperature":20.16,"conditions":"light snow","icon":"13d"},
-                {"time":"03:00 PM","temperature":20.07,"conditions":"light snow","icon":"13d"},
-                {"time":"04:00 PM","temperature":19.62,"conditions":"light snow","icon":"13d"},
-                {"time":"05:00 PM","temperature":18.25,"conditions":"light snow","icon":"13d"},
-                {"time":"06:00 PM","temperature":16.23,"conditions":"light snow","icon":"13d"},
-                {"time":"07:00 PM","temperature":14.02,"conditions":"light snow","icon":"13n"}
-            ]
-          }
+            "price_range": "$33.0 to $35.0"
         }
-      }
+    }
+}
 ```
 
 </details>
@@ -194,39 +169,39 @@ Forecast by location:
 
 ### Campsite Endpoints
 
-| http verb | name | params | description | example |
-| --- | --- | --- | --- | --- |
-| GET | /backgrounds | location| Returns an image from the given location | /api/v1/backgrounds?location=bozeman,mt |
+| http verb | name | description | example |
+| --- | --- | --- | --- |
+| GET | /campsites |  Returns all campsites | /api/v1/campsites |
+| GET | /campsites/:id | Returns a specific campsite | /api/v1/campsites/{{2}} |
+| POST | /campsites | Returns new campsite record | api/v1/campsites |
+| PATCH | /campsites/:id | Returns updated campsite record | api/v1/campsites/{{2}} |
+| DELETE | /campsites/:id | Deltes a campsite record | api/v1/campsites{{2}} |
 
-Data sourced from [Unplash API](https://unsplash.com/developers)
 
 <details>
   <summary> JSON response examples </summary>
 
-Background Image:
+One Campsite:
   
   ```
   {
     "data": {
-        "id": null,
-        "type": "image",
+        "id": "2",
+        "type": "campsite",
         "attributes": {
-            "location": "chicago,IL",
-            "description": "white and brown concrete building",
-            "urls": {
-                "raw": "https://images.unsplash.com/photo-1602276507033-1bcec514e1ef?ixid=MnwzMDc2NDN8MHwxfHNlYXJjaHwxfHxjaGljYWdvJTJDSUx8ZW58MHx8fHwxNjQ2NzY4NTU1&ixlib=rb-1.2.1",
-                "full": "https://images.unsplash.com/photo-1602276507033-1bcec514e1ef?crop=entropy&cs=srgb&fm=jpg&ixid=MnwzMDc2NDN8MHwxfHNlYXJjaHwxfHxjaGljYWdvJTJDSUx8ZW58MHx8fHwxNjQ2NzY4NTU1&ixlib=rb-1.2.1&q=85",
-                "regular": "https://images.unsplash.com/photo-1602276507033-1bcec514e1ef?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwzMDc2NDN8MHwxfHNlYXJjaHwxfHxjaGljYWdvJTJDSUx8ZW58MHx8fHwxNjQ2NzY4NTU1&ixlib=rb-1.2.1&q=80&w=1080",
-                "thumb": "https://images.unsplash.com/photo-1602276507033-1bcec514e1ef?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwzMDc2NDN8MHwxfHNlYXJjaHwxfHxjaGljYWdvJTJDSUx8ZW58MHx8fHwxNjQ2NzY4NTU1&ixlib=rb-1.2.1&q=80&w=200"
-            },
-            "photographer_credit": {
-                "name": "Dylan LaPierre",
-                "bio": null,
-                "portfolio": "https://api.unsplash.com/users/drench777/portfolio"
-            }
+            "name": "02",
+            "booked_dates": [
+                "5/5/22",
+                "5/6/22",
+                "5/7/22"
+            ],
+            "price": 33.0
         }
     }
 }
 ```
 
 </details>
+
+## Contributors 
+🌞 Sierra Tucker - [LinkedIn](https://www.linkedin.com/in/sierra-tucker-a254201a8/)
