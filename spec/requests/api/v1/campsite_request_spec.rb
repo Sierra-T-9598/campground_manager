@@ -79,7 +79,7 @@ RSpec.describe 'Campsite Endpoints' do
 
         post '/api/v1/campsites', headers: headers, params: JSON.generate(campsite: campsite_params)
         created_site = Campsite.last
-    
+
         expect(response.status).to eq(201)
         expect(created_site.name).to eq('Heart Lake Site 1')
       end

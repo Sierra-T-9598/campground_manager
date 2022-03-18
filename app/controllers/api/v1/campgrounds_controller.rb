@@ -1,6 +1,17 @@
 class Api::V1::CampgroundsController < ApplicationController
   def index
-    render json: CampgroundSerializer.new(Campground.all)
+    if params[:from] && params[:to]
+      available_campgrounds = Campground.availability(params[:from], params[:to])
+      render json: CampgroundSerializer.new(available_campgrounds)
+    elsif params[:order] == 'high_to_low'
+      ordered = Campground.price_high_to_low
+      render json: CampgroundSerializer.new(ordered)
+    elsif params[:order] == 'low_to_high'
+      ordered = Campground.price_low_to_high
+      render json: CampgroundSerializer.new(ordered)
+    else
+      render json: CampgroundSerializer.new(Campground.all)
+    end
   end
 
   def show
