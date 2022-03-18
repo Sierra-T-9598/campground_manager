@@ -2,7 +2,7 @@ Rails.application.routes.draw do
   namespace :api do
     namespace :v1 do
       resources :campgrounds do
-        resources :campsites
+        resources :campsites, only: [:index], controller: 'campground_campsites'
       end
       resources :campsites
     end
